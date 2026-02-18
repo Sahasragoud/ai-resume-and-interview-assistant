@@ -1,4 +1,5 @@
 import PyPDF2
+import re
 
 def extract_text_from_pdf(uploaded_file):
     """
@@ -12,46 +13,6 @@ def extract_text_from_pdf(uploaded_file):
 
     return text
 
-import re
-
-def extract_keywords(text):
-    """
-    Extract potential technical keywords dynamically.
-    """
-    text = text.lower()
-
-    # extract words including +, #, .
-    words = re.findall(r'\b[a-zA-Z0-9\+\#\.]{2,}\b', text)
-
-    # remove common stop words
-    stop_words = {
-        "and", "or", "the", "with", "for", "in", "on",
-        "at", "a", "an", "to", "of", "is", "are",
-        "as", "by", "from", "that", "this"
-    }
-
-    keywords = [word for word in words if word not in stop_words]
-
-    return list(set(keywords))
-
-
-
-def calculate_ats_score(resume_keywords, jd_keywords):
-
-    resume_set = set(resume_keywords)
-    jd_set = set(jd_keywords)
-
-    matched = list(resume_set & jd_set)
-    missing = list(jd_set - resume_set)
-
-    if len(jd_set) == 0:
-        score = 0
-    else:
-        score = round((len(matched) / len(jd_set)) * 100)
-
-    return score, matched, missing
-
-import re
 
 def clean_pdf_text(text):
     # Fix broken hyphen words

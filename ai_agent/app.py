@@ -1,14 +1,12 @@
 import streamlit as st
 from parser import (
     extract_text_from_pdf,
-    extract_keywords,
-    calculate_ats_score,
     build_resume_structure,
     clean_pdf_text
 )
 
-from Jd_parser import structure_jd_with_openai
 
+from Jd_parser import structure_jd_with_groq,calculate_ats_score
 
 st.set_page_config(page_title="AI Resume & Interview Assistant")
 
@@ -32,16 +30,9 @@ if uploaded_resume is not None:
     st.subheader("Extracted Resume Text:")
     st.write(resume_text)
 
-    resume_keywords = extract_keywords(resume_text)
-
-    st.subheader("Extracted Keywords:")
-    st.write(resume_keywords)
-    
     st.subheader("Structured Resume Data")
     st.json(st.session_state.resume_data)
 
-
-#----------------- jd structured ------------------
 
 # ------------------ JOB DESCRIPTION ------------------
 
@@ -53,7 +44,7 @@ if job_description and "resume_text" in st.session_state:
 
     # ----------------- STRUCTURE JD -----------------
     with st.spinner("Structuring JD using AI..."):
-        structured_jd = structure_jd_with_openai(job_description)
+        structured_jd = structure_jd_with_groq(job_description)
 
     try:
 
@@ -65,21 +56,20 @@ if job_description and "resume_text" in st.session_state:
         st.write(e)
 
     # ----------------- ATS MATCHING -----------------
-    resume_keywords = extract_keywords(st.session_state.resume_text)
-    jd_keywords = extract_keywords(job_description)
-
+    
     score, matched, missing = calculate_ats_score(
-        resume_keywords,
-        jd_keywords
+    st.session_state.resume_data,
+    structured_jd
     )
+
 
     st.subheader("ATS Score:")
     st.write(f"{score}%")
 
-    st.subheader("Matched Keywords:")
+    st.subheader("Matched skills:")
     st.write(matched)
 
-    st.subheader("Missing Keywords:")
+    st.subheader("Missing skills:")
     st.write(missing)
 
 elif job_description:
