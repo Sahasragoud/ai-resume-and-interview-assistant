@@ -10,6 +10,11 @@ from ai_agent.Jd_parser import (
     calculate_ats_score
 )
 
+from ai_agent.ats_optimizer import (
+    optimize_resume_with_ai,
+    create_docx
+)
+
 st.set_page_config(page_title="AI Resume & Interview Assistant")
 
 st.title("AI Resume & Interview Assistant")
@@ -73,7 +78,53 @@ if job_description and "resume_text" in st.session_state:
 
     st.subheader("Missing skills:")
     st.write(missing)
-
+    
 elif job_description:
     st.warning("⚠ Please upload resume first.")
+    
+st.divider()
 
+st.subheader("🚀 Improve Resume with AI")
+
+# Only show button if ATS calculation happened
+if "resume_data" in st.session_state and "structured_jd" in st.session_state:
+
+    if st.button("Optimize Resume for Better ATS Score"):
+
+        with st.spinner("Optimizing resume..."):
+
+            optimized_resume = optimize_resume_with_ai(
+                st.session_state.resume_text,   # use raw text
+                missing,                        # missing skills from ATS
+                job_description                 # full JD text
+            )
+
+        # Show improved resume
+        st.header("Optimized Resume")
+        st.write(optimized_resume)
+
+        # Download button
+        st.download_button(
+            label="Download Improved Resume",
+            data=optimized_resume,
+            file_name="optimized_resume.txt",
+            mime="text/plain"
+        )
+
+        # Recalculate ATS score
+        new_score, _, _ = calculate_ats_score(
+            build_resume_structure(optimized_resume),
+            st.session_state.structured_jd
+        )
+
+        st.success(f"New ATS Score: {new_score}%")
+        docx_file = create_docx(optimized_resume)
+
+        st.download_button(
+            label="Download Improved Resume (DOCX)",
+            data=docx_file,
+            file_name="optimized_resume.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+else:
+    st.info("Upload resume and paste JD to enable optimization.")
